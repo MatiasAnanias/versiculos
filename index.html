@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cartões de Versículos</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0d1730">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Versículos">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&family=Figtree:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#eef1f6; --ink:#0f1f3a; --muted:#4a5b78; --line:#c9d2e0; --btn-bg:#0f1f3a; --btn-fg:#f4f7fb; --focus:#b8791a;
+  --serif:"Literata",Georgia,serif; --sans:"Figtree",system-ui,sans-serif;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){--bg:#0b1226;--ink:#f1ece0;--muted:#a9b6cf;--line:#2a3a5e;--btn-bg:#e8b04a;--btn-fg:#0b1226;--focus:#e8b04a}
+}
+:root[data-theme="dark"]{--bg:#0b1226;--ink:#f1ece0;--muted:#a9b6cf;--line:#2a3a5e;--btn-bg:#e8b04a;--btn-fg:#0b1226;--focus:#e8b04a}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans)}
+header,main{max-width:1100px;margin:0 auto;padding:0 20px}
+header{padding-top:32px;padding-bottom:20px}
+h1{font-family:var(--serif);font-weight:600;font-size:clamp(1.8rem,5vw,2.6rem);margin:0 0 8px;letter-spacing:-.01em}
+header p{color:var(--muted);margin:0 0 20px;max-width:56ch;line-height:1.5}
+.estilos{display:flex;flex-wrap:wrap;gap:8px}
+.estilos button{font:600 .95rem var(--sans);color:var(--ink);background:transparent;border:2px solid var(--line);border-radius:999px;padding:8px 16px;cursor:pointer}
+.estilos button[aria-pressed="true"]{border-color:var(--ink)}
+button:focus-visible,a:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.grade{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:28px 20px;padding:12px 0 56px}
+.face{position:relative;aspect-ratio:1;container-type:inline-size;border-radius:12px;overflow:hidden;background:linear-gradient(155deg,var(--a),var(--b));color:var(--ci)}
+.grade[data-formato="stories"] .face{aspect-ratio:9/16}
+.verso{font-family:var(--serif);font-style:italic;font-size:4.6cqw;line-height:1.5;margin:0 0 3.7cqw}
+.conteudo{position:absolute;inset:0;padding:8cqw;display:flex;flex-direction:column;justify-content:center}
+.cat{position:absolute;top:8cqw;left:8cqw;font-size:3.2cqw;opacity:.75}
+.marca{position:absolute;bottom:8cqw;left:8cqw;font-size:2.8cqw;opacity:.7}
+.tema{font-family:var(--serif);font-weight:600;font-size:14cqw;line-height:1;margin:0 0 2.6cqw;overflow-wrap:anywhere;letter-spacing:-.01em}
+.ref{font-family:var(--serif);font-weight:600;font-size:4.8cqw;margin:0 0 3.7cqw;color:var(--ca)}
+.refl{font-family:var(--serif);font-size:4.3cqw;line-height:1.55;margin:0}
+.acoes{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.acoes button,.acoes a{font:600 .9rem var(--sans);background:var(--btn-bg);color:var(--btn-fg);border:0;border-radius:999px;padding:9px 16px;cursor:pointer;text-decoration:none}
+.acoes .sec{background:transparent;color:var(--ink);border:2px solid var(--line);padding:7px 14px}
+[hidden]{display:none!important}
+#aviso{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .2s}
+#aviso.on{opacity:1}
+.sorteio{margin-top:14px;font:600 .95rem var(--sans);background:var(--btn-bg);color:var(--btn-fg);border:0;border-radius:999px;padding:10px 20px;cursor:pointer}
+article.destaque .face{outline:4px solid var(--focus);outline-offset:4px}
+.pers{margin-top:14px}
+.pers summary{cursor:pointer;font-weight:600}
+.imp{margin-top:16px;max-width:720px}
+.imp p{color:var(--muted);font-size:.9rem;line-height:1.5;margin:0 0 8px}
+.dica{color:var(--muted);font-size:.9rem;line-height:1.5;margin:8px 0}
+.ia{max-width:720px}
+.ia-linha{display:flex;gap:8px;flex-wrap:wrap}
+.ia input[type=text]{flex:1;min-width:220px;font:1rem var(--sans);color:var(--ink);background:transparent;border:2px solid var(--line);border-radius:8px;padding:10px 12px}
+.ia button{font:600 .95rem var(--sans);background:var(--btn-bg);color:var(--btn-fg);border:0;border-radius:999px;padding:10px 18px;cursor:pointer}
+.ia button:disabled{opacity:.6;cursor:default}
+.ia-res{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:10px}
+.ia-res li{border:2px solid var(--line);border-radius:10px;padding:12px;display:flex;gap:12px;align-items:flex-start;justify-content:space-between}
+.ia-res strong{font-family:var(--serif)}
+.ia-res .t{display:block;color:var(--muted);font-size:.92rem;line-height:1.45;margin-top:2px}
+.ia-res button{flex:none}
+.pers-campos{display:flex;flex-wrap:wrap;gap:14px;margin-top:12px;align-items:flex-end}
+.pers label{display:flex;flex-direction:column;gap:4px;font-size:.9rem;color:var(--muted)}
+.pers input[type=text]{font:1rem var(--sans);color:var(--ink);background:transparent;border:2px solid var(--line);border-radius:8px;padding:8px 10px;min-width:240px}
+.pers input[type=color]{width:56px;height:40px;padding:2px;border:2px solid var(--line);border-radius:8px;background:transparent;cursor:pointer}
+.campo-texto{width:100%;margin-top:8px;font:1rem/1.5 var(--serif);color:var(--ink);background:transparent;border:2px solid var(--line);border-radius:8px;padding:10px;resize:vertical}
+#welcome{position:fixed;inset:0;z-index:100;background:radial-gradient(ellipse at 50% 40%,#1a2a52 0%,#0d1730 70%);color:#f1ece0;transition:opacity .7s ease}
+#welcome.saindo{opacity:0;pointer-events:none}
+#cena{position:absolute;inset:0;width:100%;height:100%;display:block}
+#welcome .texto{position:absolute;left:0;right:0;bottom:0;padding:24px 24px calc(40px + env(safe-area-inset-bottom,0px));max-width:640px;margin:0 auto}
+#welcome h2{font-family:var(--serif);font-weight:600;font-size:clamp(2rem,8vw,3.4rem);line-height:1.1;margin:0 0 12px;letter-spacing:-.01em}
+#welcome p{font-family:var(--serif);font-size:1.1rem;line-height:1.6;color:#a9b6cf;margin:0 0 28px;max-width:44ch}
+#welcome button{font:600 1rem var(--sans);background:#e8b04a;color:#0d1730;border:0;border-radius:999px;padding:14px 28px;cursor:pointer}
+</style>
+<script src="three.min.js"></script>
+</head>
+<body>
+<section id="welcome" aria-label="Boas-vindas">
+  <canvas id="cena" aria-hidden="true"></canvas>
+  <div class="texto">
+    <h2>Uma palavra para o seu dia</h2>
+    <p>Escolha um cartão, baixe a imagem e compartilhe com quem você ama.</p>
+    <button type="button" id="enter">Entrar</button>
+  </div>
+</section>
+<header>
+  <h1>Cartões para compartilhar</h1>
+  <p>Escolha um estilo, baixe a imagem de um cartão e publique nas suas redes sociais.</p>
+  <div class="estilos" id="estilos" role="group" aria-label="Estilo dos cartões"></div>
+  <div class="estilos" id="formatos" role="group" aria-label="Formato dos cartões" style="margin-top:10px"></div>
+  <details class="pers">
+    <summary>Personalizar com meu nome e minhas cores</summary>
+    <div class="pers-campos">
+      <label>Nome no rodapé <input id="p-nome" type="text" maxlength="40" placeholder="Nome da igreja ou do perfil"></label>
+      <label>Fundo (início) <input id="p-a" type="color"></label>
+      <label>Fundo (fim) <input id="p-b" type="color"></label>
+      <label>Texto <input id="p-ink" type="color"></label>
+      <label>Destaque <input id="p-acc" type="color"></label>
+    </div>
+    <div class="imp">
+      <p>Textos bíblicos em lote: toque em “Gerar modelo”, escreva depois do sinal | o texto de cada versículo, na tradução que você usa, e toque em “Aplicar textos”.</p>
+      <textarea id="imp" rows="8" class="campo-texto" aria-label="Textos bíblicos em lote" placeholder="Referência | texto"></textarea>
+      <div class="acoes"><button type="button" id="gerar" class="sec">Gerar modelo</button><button type="button" id="aplicar">Aplicar textos</button></div>
+    </div>
+  </details>
+  <details class="pers ia" id="iaBox" hidden>
+    <summary>Buscar versículos com IA</summary>
+    <p class="dica">Descreva um tema ou um momento e a IA sugere referências bíblicas. Confira cada uma na sua Bíblia antes de publicar.</p>
+    <div class="ia-linha">
+      <input id="iaTema" type="text" maxlength="120" placeholder="Ex.: ansiedade, gratidão, recomeço" aria-label="Tema ou momento">
+      <button type="button" id="iaBuscar">Buscar</button>
+    </div>
+    <p id="iaMsg" class="dica" role="status"></p>
+    <ul id="iaRes" class="ia-res"></ul>
+  </details>
+  <button type="button" class="sorteio" id="sortear">Sortear um versículo</button>
+  <button type="button" class="sorteio" id="instalar" hidden style="margin-left:8px">Instalar aplicativo</button>
+</header>
+<main>
+  <div class="grade" id="grade"></div>
+</main>
+<div id="aviso" role="status" aria-live="polite"></div>
+
+<script>
+const verses = [
+{id:1,referencia:"Filipenses 4:13",tema:"Força",categoria:"Fé",reflexao:"Cristo capacita seus filhos a enfrentar cada desafio com coragem e perseverança."},
+{id:2,referencia:"Isaías 41:10",tema:"Coragem",categoria:"Consolo",reflexao:"A presença de Deus elimina o medo e fortalece o coração."},
+{id:3,referencia:"Salmos 23:1",tema:"Cuidado",categoria:"Confiança",reflexao:"Deus é um pastor fiel que supre as necessidades de seu povo."},
+{id:4,referencia:"João 3:16",tema:"Amor",categoria:"Salvação",reflexao:"O amor de Deus foi demonstrado de forma perfeita em Jesus Cristo."},
+{id:5,referencia:"Mateus 6:33",tema:"Prioridade",categoria:"Discipulado",reflexao:"Colocar Deus em primeiro lugar transforma todas as outras áreas da vida."},
+{id:6,referencia:"Josué 1:9",tema:"Coragem",categoria:"Fé",reflexao:"A coragem nasce da certeza de que Deus está conosco."},
+{id:7,referencia:"Salmos 37:5",tema:"Entrega",categoria:"Confiança",reflexao:"Entregar nossos caminhos ao Senhor é um ato de fé e dependência."},
+{id:8,referencia:"1 Pedro 5:7",tema:"Ansiedade",categoria:"Consolo",reflexao:"Podemos confiar nossas preocupações a Deus porque Ele cuida de nós."},
+{id:9,referencia:"Salmos 119:105",tema:"Direção",categoria:"Palavra",reflexao:"A Palavra de Deus ilumina nossas decisões diariamente."},
+{id:10,referencia:"Romanos 12:12",tema:"Esperança",categoria:"Perseverança",reflexao:"A esperança em Deus sustenta o cristão em tempos difíceis."},
+{id:11,referencia:"Romanos 8:28",tema:"Propósito",categoria:"Confiança",reflexao:"Deus é capaz de transformar circunstâncias difíceis em bênçãos."},
+{id:12,referencia:"Jeremias 29:11",tema:"Futuro",categoria:"Esperança",reflexao:"Deus tem planos bons e propósitos eternos para seus filhos."},
+{id:13,referencia:"Provérbios 3:5",tema:"Confiança",categoria:"Sabedoria",reflexao:"Confiar em Deus é mais seguro do que depender do próprio entendimento."},
+{id:14,referencia:"Neemias 8:10",tema:"Alegria",categoria:"Fortalecimento",reflexao:"A verdadeira força espiritual vem da alegria no Senhor."},
+{id:15,referencia:"Salmos 46:1",tema:"Refúgio",categoria:"Consolo",reflexao:"Deus é abrigo seguro nas dificuldades."},
+{id:16,referencia:"Isaías 40:31",tema:"Renovação",categoria:"Esperança",reflexao:"Quem espera em Deus encontra novas forças."},
+{id:17,referencia:"Hebreus 11:1",tema:"Fé",categoria:"Fundamentos",reflexao:"A fé nos ajuda a confiar em Deus mesmo sem ver o resultado."},
+{id:18,referencia:"Romanos 8:31",tema:"Vitória",categoria:"Confiança",reflexao:"Nenhuma oposição é maior do que o poder de Deus."},
+{id:19,referencia:"Salmos 91:1",tema:"Proteção",categoria:"Consolo",reflexao:"A presença de Deus é um lugar seguro para descansar."},
+{id:20,referencia:"João 14:6",tema:"Salvação",categoria:"Cristo",reflexao:"Jesus é o caminho para uma vida transformada."},
+{id:21,referencia:"Salmos 27:1",tema:"Luz",categoria:"Confiança",reflexao:"Com Deus como luz, o medo perde o poder de decidir o nosso caminho."},
+{id:22,referencia:"Mateus 11:28",tema:"Descanso",categoria:"Consolo",reflexao:"Jesus convida quem está cansado a parar e encontrar nele alívio verdadeiro."},
+{id:23,referencia:"Filipenses 4:6-7",tema:"Paz",categoria:"Consolo",reflexao:"A oração troca a inquietação por uma paz que a lógica não explica."},
+{id:24,referencia:"Salmos 34:18",tema:"Proximidade",categoria:"Consolo",reflexao:"Deus não se afasta de quem está quebrantado; Ele chega mais perto."},
+{id:25,referencia:"Lamentações 3:22-23",tema:"Fidelidade",categoria:"Esperança",reflexao:"Cada manhã traz uma nova prova de que o cuidado de Deus não se esgota."},
+{id:26,referencia:"Efésios 2:8",tema:"Graça",categoria:"Salvação",reflexao:"A salvação é um presente de Deus, e não um prêmio pelo nosso esforço."},
+{id:27,referencia:"Colossenses 3:23",tema:"Trabalho",categoria:"Discipulado",reflexao:"Tudo o que fazemos ganha sentido quando é feito para o Senhor."},
+{id:28,referencia:"Tiago 1:5",tema:"Sabedoria",categoria:"Sabedoria",reflexao:"Deus responde com generosidade a quem pede direção com sinceridade."},
+{id:29,referencia:"1 Tessalonicenses 5:18",tema:"Gratidão",categoria:"Fundamentos",reflexao:"Agradecer em todas as situações muda a forma como enxergamos a vida."},
+{id:30,referencia:"Gálatas 6:9",tema:"Constância",categoria:"Perseverança",reflexao:"Fazer o bem sem desanimar prepara uma colheita que vem no tempo certo."},
+{id:31,referencia:"Provérbios 16:3",tema:"Planos",categoria:"Sabedoria",reflexao:"Os projetos ficam mais firmes quando são entregues a Deus desde o início."},
+{id:32,referencia:"Salmos 121:2",tema:"Socorro",categoria:"Confiança",reflexao:"Nossa ajuda vem do Criador, que não se cansa de cuidar de nós."},
+{id:33,referencia:"2 Corínthios 12:9",tema:"Suficiente",categoria:"Fortalecimento",reflexao:"A graça de Deus alcança justamente onde as nossas forças terminam."},
+{id:34,referencia:"Mateus 28:20",tema:"Presença",categoria:"Fé",reflexao:"Jesus prometeu caminhar conosco todos os dias, sem exceção."},
+{id:35,referencia:"João 8:12",tema:"Clareza",categoria:"Cristo",reflexao:"Quem segue Jesus não anda no escuro, porque recebe luz para cada passo."},
+{id:36,referencia:"Deuteronômio 31:6",tema:"Firmeza",categoria:"Fortalecimento",reflexao:"Deus vai adiante de nós e não nos abandona no meio da jornada."},
+{id:37,referencia:"Salmos 139:14",tema:"Valor",categoria:"Identidade",reflexao:"Cada pessoa foi criada com cuidado e carrega um valor que Deus conhece."},
+{id:38,referencia:"Mateus 5:16",tema:"Testemunho",categoria:"Discipulado",reflexao:"Uma vida coerente é a maneira mais clara de apontar para Deus."},
+{id:39,referencia:"Efésios 4:32",tema:"Perdão",categoria:"Discipulado",reflexao:"Perdoar como Deus nos perdoou liberta quem recebe e quem oferece."},
+{id:40,referencia:"Salmos 56:3",tema:"Medo",categoria:"Confiança",reflexao:"Quando o medo aparece, a confiança em Deus é o primeiro passo de volta."}
+];
+
+const ESTILOS = {
+  noite:{nome:"Noite",a:"#1a2a52",b:"#0d1730",ink:"#f1ece0",acc:"#e8b04a"},
+  alvorecer:{nome:"Alvorecer",a:"#ffd6a5",b:"#ff9fb2",ink:"#3d1535",acc:"#7a1a4b"},
+  mar:{nome:"Mar",a:"#14827a",b:"#0b3d4a",ink:"#ecfeff",acc:"#fde68a"},
+  campo:{nome:"Campo",a:"#eaf3d3",b:"#bfd89a",ink:"#1f3a1f",acc:"#3f5a0c"},
+  meu:{nome:"Meu estilo",a:"#2b1b4a",b:"#5a2d82",ink:"#fff7e6",acc:"#ffd166"}
+};
+const PADRAO = "Versículo do dia";
+let rodape = PADRAO;
+const textos = {};
+const extras = [];
+const CHAVE = "cartoes-config";
+let estilo = "noite";
+let formato = "quadrado";
+let baixar = null;
+const grade = document.getElementById("grade");
+const aviso = document.getElementById("aviso");
+const temShare = typeof navigator.share === "function";
+
+function avisar(msg){
+  aviso.textContent = msg;
+  aviso.classList.add("on");
+  clearTimeout(avisar.t);
+  avisar.t = setTimeout(function(){ aviso.classList.remove("on"); }, 2200);
+}
+
+function texto(v){ return v.tema + ": " + v.reflexao + "\n" + (v.texto ? "“" + v.texto + "” " : "") + v.referencia; }
+function slug(v){ return v.referencia.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,""); }
+
+function aplicarEstilo(){
+  const e = ESTILOS[estilo];
+  grade.style.setProperty("--a", e.a);
+  grade.style.setProperty("--b", e.b);
+  grade.style.setProperty("--ci", e.ink);
+  grade.style.setProperty("--ca", e.acc);
+  document.querySelectorAll("#estilos button").forEach(function(b){
+    b.setAttribute("aria-pressed", String(b.dataset.k === estilo));
+  });
+  grade.dataset.formato = formato;
+  document.querySelectorAll("#formatos button").forEach(function(b){
+    b.setAttribute("aria-pressed", String(b.dataset.k === formato));
+  });
+}
+
+function quebrar(ctx, txt, largura){
+  const palavras = txt.split(" "), linhas = [];
+  let atual = "";
+  palavras.forEach(function(p){
+    const t = atual ? atual + " " + p : p;
+    if (ctx.measureText(t).width > largura && atual) { linhas.push(atual); atual = p; }
+    else atual = t;
+  });
+  if (atual) linhas.push(atual);
+  return linhas;
+}
+
+async function desenhar(v){
+  try { await Promise.all([document.fonts.load("600 100px Literata"), document.fonts.load("400 40px Literata"), document.fonts.load("italic 400 40px Literata"), document.fonts.load("400 30px Figtree")]); } catch(e){}
+  const S = 1080, H = formato === "stories" ? 1920 : 1080, P = 86, e = ESTILOS[estilo];
+  const c = document.createElement("canvas");
+  c.width = S; c.height = H;
+  const x = c.getContext("2d");
+  const g = x.createLinearGradient(S*0.2, 0, S*0.8, H);
+  g.addColorStop(0, e.a); g.addColorStop(1, e.b);
+  x.fillStyle = g; x.fillRect(0, 0, S, H);
+
+  x.textBaseline = "alphabetic";
+  x.fillStyle = e.ink;
+  x.globalAlpha = 0.75;
+  x.font = "400 34px Figtree, system-ui, sans-serif";
+  x.fillText(v.categoria, P, P + 30);
+  x.font = "400 30px Figtree, system-ui, sans-serif";
+  x.globalAlpha = 0.7;
+  x.fillText(rodape, P, H - P);
+  x.globalAlpha = 1;
+
+  let ts = 151;
+  do { x.font = "600 " + ts + "px Literata, Georgia, serif"; ts -= 4; } while (x.measureText(v.tema).width > S - 2*P && ts > 40);
+  const tamTema = parseInt(x.font.match(/(\d+)px/)[1], 10);
+  x.font = "400 46px Literata, Georgia, serif";
+  const linhas = quebrar(x, v.reflexao, S - 2*P);
+  x.font = "italic 400 50px Literata, Georgia, serif";
+  const versoL = v.texto ? quebrar(x, v.texto, S - 2*P) : [];
+  const lh = 71, vlh = 75;
+  const altura = tamTema + 28 + 52 + 40 + (versoL.length ? versoL.length * vlh + 40 : 0) + linhas.length * lh;
+  let y = (H - altura) / 2 + tamTema * 0.88;
+
+  x.fillStyle = e.ink;
+  x.font = "600 " + tamTema + "px Literata, Georgia, serif";
+  x.fillText(v.tema, P, y);
+  y += tamTema * 0.12 + 28 + 44;
+  x.fillStyle = e.acc;
+  x.font = "600 52px Literata, Georgia, serif";
+  x.fillText(v.referencia, P, y);
+  y += 40 + 46;
+  x.fillStyle = e.ink;
+  if (versoL.length) {
+    x.font = "italic 400 50px Literata, Georgia, serif";
+    versoL.forEach(function(l, i){ x.fillText(l, P, y + i * vlh); });
+    y += versoL.length * vlh + 40;
+  }
+  x.font = "400 46px Literata, Georgia, serif";
+  linhas.forEach(function(l, i){ x.fillText(l, P, y + i * lh); });
+
+  return new Promise(function(res){ c.toBlob(res, "image/png"); });
+}
+
+async function aoBaixar(v){
+  try {
+    const blob = await desenhar(v);
+    const nome = "versiculo-" + slug(v) + ".png";
+    if (baixar) {
+      await baixar.save({filename: nome, data: blob});
+    } else {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = nome;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
+    }
+    avisar("Imagem pronta");
+  } catch (err) {
+    if (err && err.code === "declined") return;
+    avisar("Não foi possível baixar a imagem");
+  }
+}
+
+async function copiar(v){
+  const t = texto(v);
+  try { await navigator.clipboard.writeText(t); avisar("Texto copiado"); return; } catch(e){}
+  const ta = document.createElement("textarea");
+  ta.value = t; ta.style.position = "fixed"; ta.style.opacity = "0";
+  document.body.appendChild(ta); ta.select();
+  let ok = false;
+  try { ok = document.execCommand("copy"); } catch(e){}
+  ta.remove();
+  avisar(ok ? "Texto copiado" : "Não foi possível copiar");
+}
+
+async function aoCompartilhar(v){
+  if (!temShare) return copiar(v);
+  try {
+    const dados = {text: texto(v)};
+    try {
+      const blob = await desenhar(v);
+      const f = new File([blob], "versiculo-" + slug(v) + ".png", {type: "image/png"});
+      if (navigator.canShare && navigator.canShare({files: [f]})) dados.files = [f];
+    } catch(e){}
+    await navigator.share(dados);
+  } catch (err) {
+    if (err && err.name === "AbortError") return;
+    copiar(v);
+  }
+}
+
+function criarCartao(v){
+  const art = document.createElement("article");
+  const face = document.createElement("div"); face.className = "face";
+  const cat = document.createElement("span"); cat.className = "cat"; cat.textContent = v.categoria;
+  const marca = document.createElement("span"); marca.className = "marca"; marca.textContent = rodape;
+  const cont = document.createElement("div"); cont.className = "conteudo";
+  const h = document.createElement("h2"); h.className = "tema"; h.textContent = v.tema;
+  const r = document.createElement("p"); r.className = "ref"; r.textContent = v.referencia;
+  const t = document.createElement("p"); t.className = "refl"; t.textContent = v.reflexao;
+  cont.append(h, r, t);
+  let vs = null;
+  function mostrarTexto(){
+    if (v.texto) {
+      if (!vs) { vs = document.createElement("p"); vs.className = "verso"; cont.insertBefore(vs, t); }
+      vs.textContent = v.texto;
+    } else if (vs) { vs.remove(); vs = null; }
+  }
+  mostrarTexto();
+  face.append(cont, cat, marca);
+
+  const acoes = document.createElement("div"); acoes.className = "acoes";
+  const bBaixar = document.createElement("button");
+  bBaixar.type = "button"; bBaixar.className = "baixar"; bBaixar.hidden = false; bBaixar.textContent = "Baixar imagem";
+  bBaixar.addEventListener("click", function(){ aoBaixar(v); });
+  const wa = document.createElement("a");
+  wa.className = "sec"; wa.textContent = "WhatsApp"; wa.target = "_blank"; wa.rel = "noopener noreferrer";
+  wa.href = "https://wa.me/?text=" + encodeURIComponent(texto(v));
+  const bShare = document.createElement("button");
+  bShare.type = "button"; bShare.className = "sec"; bShare.textContent = temShare ? "Compartilhar" : "Copiar texto";
+  bShare.addEventListener("click", function(){ aoCompartilhar(v); });
+  const bTexto = document.createElement("button");
+  bTexto.type = "button"; bTexto.className = "sec"; bTexto.textContent = "Texto bíblico";
+  bTexto.setAttribute("aria-expanded", "false");
+  const area = document.createElement("textarea");
+  area.className = "campo-texto"; area.rows = 3; area.hidden = true; area.value = v.texto || "";
+  area.setAttribute("aria-label", "Texto do versículo " + v.referencia);
+  area.placeholder = "Cole aqui o texto do versículo, na tradução que você usa";
+  bTexto.addEventListener("click", function(){
+    area.hidden = !area.hidden;
+    bTexto.setAttribute("aria-expanded", String(!area.hidden));
+    if (!area.hidden) area.focus();
+  });
+  area.addEventListener("input", function(){
+    const t2 = area.value.trim();
+    if (t2) { v.texto = t2; textos[v.id] = t2; } else { delete v.texto; delete textos[v.id]; }
+    mostrarTexto();
+    salvar();
+  });
+  acoes.append(bBaixar, wa, bShare, bTexto);
+
+  art.append(face, acoes, area);
+  return art;
+}
+
+const barra = document.getElementById("estilos");
+Object.keys(ESTILOS).forEach(function(k){
+  const b = document.createElement("button");
+  b.type = "button"; b.dataset.k = k; b.textContent = ESTILOS[k].nome;
+  b.addEventListener("click", function(){ estilo = k; aplicarEstilo(); });
+  barra.appendChild(b);
+});
+const FORMATOS = {quadrado: "Quadrado (feed)", stories: "Stories (vertical)"};
+const barraF = document.getElementById("formatos");
+Object.keys(FORMATOS).forEach(function(k){
+  const b = document.createElement("button");
+  b.type = "button"; b.dataset.k = k; b.textContent = FORMATOS[k];
+  b.addEventListener("click", function(){ formato = k; aplicarEstilo(); });
+  barraF.appendChild(b);
+});
+function salvar(){
+  try { localStorage.setItem(CHAVE, JSON.stringify({rodape: rodape, meu: ESTILOS.meu, textos: textos, extras: extras})); } catch(e){}
+}
+function carregar(){
+  try {
+    const s = JSON.parse(localStorage.getItem(CHAVE) || "null");
+    if (s) {
+      if (s.rodape) rodape = s.rodape;
+      if (s.meu) Object.assign(ESTILOS.meu, s.meu);
+      if (Array.isArray(s.extras)) s.extras.forEach(function(e){ extras.push(e); verses.push(e); });
+      if (s.textos) Object.assign(textos, s.textos);
+    }
+  } catch(e){}
+  verses.forEach(function(v){ if (textos[v.id]) v.texto = textos[v.id]; });
+}
+carregar();
+
+verses.forEach(function(v){ grade.appendChild(criarCartao(v)); });
+
+const camposCor = {a: "p-a", b: "p-b", ink: "p-ink", acc: "p-acc"};
+Object.keys(camposCor).forEach(function(k){
+  const el = document.getElementById(camposCor[k]);
+  el.value = ESTILOS.meu[k];
+  el.addEventListener("input", function(){
+    ESTILOS.meu[k] = el.value;
+    estilo = "meu";
+    aplicarEstilo();
+    salvar();
+  });
+});
+const pNome = document.getElementById("p-nome");
+pNome.value = rodape === PADRAO ? "" : rodape;
+pNome.addEventListener("input", function(){
+  rodape = pNome.value.trim() || PADRAO;
+  document.querySelectorAll(".marca").forEach(function(m){ m.textContent = rodape; });
+  salvar();
+});
+
+function norm(s){ return s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ").trim(); }
+document.getElementById("gerar").addEventListener("click", function(){
+  document.getElementById("imp").value = verses.map(function(v){ return v.referencia + " | " + (v.texto || ""); }).join("\n");
+});
+document.getElementById("aplicar").addEventListener("click", function(){
+  let n = 0;
+  document.getElementById("imp").value.split("\n").forEach(function(l){
+    const i = l.indexOf("|");
+    if (i < 0) return;
+    const ref = norm(l.slice(0, i)), txt = l.slice(i + 1).trim();
+    const v = verses.find(function(x){ return norm(x.referencia) === ref; });
+    if (!v || !txt) return;
+    v.texto = txt; textos[v.id] = txt; n++;
+  });
+  salvar();
+  grade.textContent = "";
+  verses.forEach(function(v){ grade.appendChild(criarCartao(v)); });
+  aplicarEstilo();
+  avisar(n ? n + " textos aplicados" : "Nenhum texto encontrado");
+});
+
+const iaBox = document.getElementById("iaBox");
+const iaTema = document.getElementById("iaTema");
+const iaBuscar = document.getElementById("iaBuscar");
+const iaMsg = document.getElementById("iaMsg");
+const iaRes = document.getElementById("iaRes");
+let sampler = null;
+
+if (window.claude && typeof claude.use === "function") {
+  claude.use("sample").then(function(s){
+    if (s) { sampler = s; iaBox.hidden = false; }
+  }).catch(function(){});
+}
+
+function msgErro(code){
+  if (code === "not_granted") return "Você precisa permitir o uso do Claude para buscar com IA.";
+  if (code === "rate_limited") return "Muitas buscas seguidas. Aguarde um instante e tente de novo.";
+  return "Não foi possível buscar agora. Tente novamente em instantes.";
+}
+
+function adicionar(sug){
+  const id = verses.reduce(function(m, v){ return Math.max(m, v.id); }, 0) + 1;
+  const novo = {id: id, referencia: sug.referencia, tema: sug.tema, categoria: sug.categoria, reflexao: sug.reflexao};
+  verses.push(novo);
+  extras.push(novo);
+  salvar();
+  grade.appendChild(criarCartao(novo));
+  avisar("Cartão adicionado ao final da página");
+}
+
+function mostrarSugestoes(lista){
+  iaRes.textContent = "";
+  lista.forEach(function(sug){
+    const li = document.createElement("li");
+    const info = document.createElement("div");
+    const t = document.createElement("strong"); t.textContent = sug.referencia;
+    const d = document.createElement("span"); d.className = "t"; d.textContent = sug.tema + ": " + sug.reflexao;
+    info.append(t, d);
+    const b = document.createElement("button");
+    b.type = "button"; b.textContent = "Adicionar";
+    b.addEventListener("click", function(){ adicionar(sug); b.disabled = true; b.textContent = "Adicionado"; });
+    li.append(info, b);
+    iaRes.appendChild(li);
+  });
+}
+
+async function buscarIA(){
+  const tema = iaTema.value.trim();
+  if (!sampler || !tema) { iaMsg.textContent = "Escreva um tema ou um momento para buscar."; return; }
+  iaBuscar.disabled = true;
+  iaRes.textContent = "";
+  iaMsg.textContent = "Buscando…";
+  const jaTem = verses.map(function(v){ return v.referencia; }).join("; ");
+  const pedido =
+    'Você ajuda uma página brasileira de cartões com versículos bíblicos.\n' +
+    'Sugira 5 passagens bíblicas reais e conhecidas sobre este tema ou momento: ' + JSON.stringify(tema) + '.\n' +
+    'Responda somente com um array JSON, sem nenhum texto fora dele. Cada item deve ter: ' +
+    '"referencia" (livro, capítulo e versículo no formato brasileiro, como Salmos 23:1), ' +
+    '"tema" (uma palavra em português), "categoria" (uma palavra em português) e ' +
+    '"reflexao" (uma frase original em português do Brasil, com até 18 palavras, sem citar o texto do versículo).\n' +
+    'Não inclua o texto do versículo. Use só referências que você tem certeza que existem. Não repita estas: ' + jaTem + '.';
+  try {
+    const dados = await sampler.json(pedido, {modelTier: "quick"});
+    const existentes = verses.map(function(v){ return norm(v.referencia); });
+    const lista = (Array.isArray(dados) ? dados : []).filter(function(s){
+      return s && typeof s.referencia === "string" && typeof s.tema === "string" &&
+             typeof s.categoria === "string" && typeof s.reflexao === "string" &&
+             s.referencia.length <= 40 && existentes.indexOf(norm(s.referencia)) < 0;
+    }).slice(0, 5);
+    if (lista.length) {
+      iaMsg.textContent = "Sugestões encontradas. Confira cada referência na sua Bíblia.";
+      mostrarSugestoes(lista);
+    } else {
+      iaMsg.textContent = "Nenhuma sugestão nova para esse tema. Tente outras palavras.";
+    }
+  } catch (e) {
+    iaMsg.textContent = msgErro(e && e.code);
+  } finally {
+    iaBuscar.disabled = false;
+  }
+}
+iaBuscar.addEventListener("click", buscarIA);
+iaTema.addEventListener("keydown", function(e){ if (e.key === "Enter") buscarIA(); });
+aplicarEstilo();
+
+if (window.claude && typeof claude.use === "function") {
+  claude.use("downloads").then(function(d){
+    if (!d) return;
+    baixar = d;
+    document.querySelectorAll(".baixar").forEach(function(b){ b.hidden = false; });
+  }).catch(function(){});
+}
+
+let ultimo = -1;
+document.getElementById("sortear").addEventListener("click", function(){
+  const cartoes = grade.querySelectorAll("article");
+  let i;
+  do { i = Math.floor(Math.random() * cartoes.length); } while (i === ultimo && cartoes.length > 1);
+  ultimo = i;
+  cartoes.forEach(function(c){ c.classList.remove("destaque"); });
+  const alvo = cartoes[i];
+  alvo.classList.add("destaque");
+  const reduzMov = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  alvo.scrollIntoView({behavior: reduzMov ? "auto" : "smooth", block: "center"});
+  clearTimeout(ultimo.t);
+  setTimeout(function(){ alvo.classList.remove("destaque"); }, 3000);
+});
+
+(function(){
+  const welcome = document.getElementById("welcome");
+  const enter = document.getElementById("enter");
+  const canvas = document.getElementById("cena");
+  let raf = 0, renderer = null;
+  const reduz = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  enter.addEventListener("click", function(){
+    welcome.classList.add("saindo");
+    setTimeout(function(){
+      cancelAnimationFrame(raf);
+      if (renderer) renderer.dispose();
+      welcome.remove();
+      document.getElementById("sortear").focus();
+    }, 700);
+  });
+  enter.focus();
+
+  try {
+    if (!window.THREE) throw new Error("three indisponível");
+    renderer = new THREE.WebGLRenderer({canvas: canvas, antialias: true, alpha: true});
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 50);
+    camera.position.set(0, 0, 6);
+
+    const grupo = new THREE.Group();
+    grupo.position.y = 0.9;
+    const externo = new THREE.Mesh(
+      new THREE.IcosahedronGeometry(1.6, 1),
+      new THREE.MeshBasicMaterial({color: 0xe8b04a, wireframe: true, transparent: true, opacity: 0.85})
+    );
+    const interno = new THREE.Mesh(
+      new THREE.OctahedronGeometry(0.8, 0),
+      new THREE.MeshBasicMaterial({color: 0xf1ece0, transparent: true, opacity: 0.9})
+    );
+    grupo.add(externo, interno);
+    scene.add(grupo);
+
+    const n = 900, pos = new Float32Array(n * 3);
+    for (let i = 0; i < n; i++) {
+      const r = 2.6 + Math.random() * 5;
+      const t = Math.random() * Math.PI * 2;
+      const p = Math.acos(2 * Math.random() - 1);
+      pos[i*3] = r * Math.sin(p) * Math.cos(t);
+      pos[i*3+1] = r * Math.sin(p) * Math.sin(t);
+      pos[i*3+2] = r * Math.cos(p);
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+    const particulas = new THREE.Points(geo, new THREE.PointsMaterial({color: 0xf1ece0, size: 0.04, transparent: true, opacity: 0.8}));
+    scene.add(particulas);
+
+    function ajustar(){
+      const w = canvas.clientWidth, h = canvas.clientHeight;
+      renderer.setSize(w, h, false);
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+    }
+    ajustar();
+    window.addEventListener("resize", ajustar);
+
+    let alvoX = 0, alvoY = 0;
+    window.addEventListener("pointermove", function(e){
+      alvoX = (e.clientX / window.innerWidth - 0.5) * 1.6;
+      alvoY = (e.clientY / window.innerHeight - 0.5) * 1.0;
+    });
+
+    function frame(){
+      if (!reduz) {
+        externo.rotation.x += 0.004;
+        externo.rotation.y += 0.006;
+        interno.rotation.x -= 0.008;
+        interno.rotation.y -= 0.005;
+        particulas.rotation.y += 0.0008;
+        camera.position.x += (alvoX - camera.position.x) * 0.04;
+        camera.position.y += (-alvoY - camera.position.y) * 0.04;
+        camera.lookAt(0, 0.4, 0);
+      }
+      renderer.render(scene, camera);
+      raf = requestAnimationFrame(frame);
+    }
+    frame();
+  } catch (e) {
+    renderer = null;
+  }
+})();
+
+// PWA: service worker e botão de instalar
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", function(){
+    navigator.serviceWorker.register("sw.js").catch(function(){});
+  });
+}
+let promptInstalar = null;
+const botaoInstalar = document.getElementById("instalar");
+window.addEventListener("beforeinstallprompt", function(e){
+  e.preventDefault();
+  promptInstalar = e;
+  botaoInstalar.hidden = false;
+});
+botaoInstalar.addEventListener("click", async function(){
+  if (!promptInstalar) return;
+  promptInstalar.prompt();
+  try { await promptInstalar.userChoice; } catch(e){}
+  promptInstalar = null;
+  botaoInstalar.hidden = true;
+});
+window.addEventListener("appinstalled", function(){ botaoInstalar.hidden = true; avisar("Aplicativo instalado"); });
+</script>
+</body>
+</html>
